@@ -1,4 +1,4 @@
-const DEFAULTS = {
+const SETTINGS = {
   startDurationMs: 800,
   speedupFactor: 0.94,
   resumeSlowerByMs: 300,
@@ -10,115 +10,112 @@ const DEFAULTS = {
   wrongThresholdStop: 3,
   maxTrialCount: 180,
   minDurationMs: 250,
-  maxDurationMs: 2500,
-  geolocationTimeoutMs: 10000,
-  geolocationHighAccuracy: 1,
-  reverseGeocodeEnabled: 1
+  maxDurationMs: 2500
 };
 
-const GROUPS = [
-  {title:"Timing",description:"How fast the paced phase starts and tightens.",
-   fields:[
-    ["startDurationMs","Starting paced duration (ms)","Initial machine-paced display time."],
-    ["speedupFactor","Speedup factor after non-block frame","Multiply duration by this after a successful paced frame. Smaller = faster tightening."],
-    ["resumeSlowerByMs","Resume slower after block (ms)","How much slower the test resumes after a block."],
-    ["minDurationMs","Minimum paced duration (ms)","Fastest allowed display time."],
-    ["maxDurationMs","Maximum paced duration (ms)","Slowest allowed display time."],
-    ["maxTrialCount","Maximum paced trial count","Hard stop so the test cannot run forever."]
-   ]},
-  {title:"Blocking and recovery",description:"How blocks are detected and how recovery works.",
-   fields:[
-    ["consecutiveMissesForBlock","Consecutive missed frames for a block","How many unresolved paced frames trigger blocking."],
-    ["recoveryCorrectTrials","Correct self-paced recovery trials required","How many self-paced trials must be correct before returning to paced mode."],
-    ["qualifyingBlockGapMs","Gap between consecutive blocks required to end (ms)","End once two consecutive block points are closer than this."]
-   ]},
-  {title:"Stopping rules",description:"Safety and validity rules that stop the run.",
-   fields:[
-    ["noResponseTimeoutMs","Time to end test if no response (ms)","End immediately if no response occurs for this long."],
-    ["wrongWindowSize","Rolling window size for wrong-answer stop","Window used to check recent answer quality."],
-    ["wrongThresholdStop","Stop if wrong answers exceed this count in window","Restart-required threshold for recent wrong answers."]
-   ]},
-  {title:"Location / metadata",description:"Context capture options.",
-   fields:[
-    ["geolocationTimeoutMs","Geolocation timeout (ms)","How long to wait for a location fix."],
-    ["geolocationHighAccuracy","Use high-accuracy geolocation (1=yes, 0=no)","Use GPS-style accuracy where available."],
-    ["reverseGeocodeEnabled","Street-address lookup (1=yes, 0=no)","Try to convert coordinates to a local street address."]
-   ]}
+const SHAPES = ["square","triangle","diamond","hexagon","star","pentagon"];
+const SYMBOLS = ["•","••","•••","—","——","|||","• —","— •","• |","| •","• •","| |"];
+const SAMN_PERELLI = [
+  [7, "Full alert, wide awake"],
+  [6, "Very lively, responsive, but not at peak"],
+  [5, "Okay, about normal"],
+  [4, "Less than sharp, let down"],
+  [3, "Feeling dull, losing focus"],
+  [2, "Very difficult to concentrate, groggy"],
+  [1, "Unable to function, ready to drop"]
 ];
 
-const SHAPES = ["circle","square","triangle","diamond","hexagon","star"];
-const SYMBOLS = ["•","••","•••","—","——","|||","• —","— •","• |","| •","• •","| |"];
-
-let settings = loadSettings();
 const state = {
-  phase:"idle", duration:settings.startDurationMs, blockDuration:null, current:null, previous:null,
-  unresolvedStreak:0, overloads:[], recoveries:[], recoveryCorrectCompleted:0, liveData:[],
-  history:JSON.parse(localStorage.getItem("blockrate_shape_match_config_history")||"[]"),
-  oneBackCount:0, onTimeCount:0, totalTrials:0, trialTimer:null, absoluteNoResponseTimer:null,
-  lastBlockGap:null, qualifyingBlockPair:null, endReason:"", lastFiveAnswers:[]
+  phase: "idle",
+  duration: SETTINGS.startDurationMs,
+  blockDuration: null,
+  current: null,
+  previous: null,
+  unresolvedStreak: 0,
+  overloads: [],
+  recoveries: [],
+  recoveryCorrectCompleted: 0,
+  liveData: [],
+  history: JSON.parse(localStorage.getItem("blockrate_shape_match_v5_history") || "[]"),
+  oneBackCount: 0,
+  onTimeCount: 0,
+  totalTrials: 0,
+  trialTimer: null,
+  absoluteNoResponseTimer: null,
+  lastBlockGap: null,
+  qualifyingBlockPair: null,
+  endReason: "",
+  lastFiveAnswers: [],
+  samnPerelli: null
 };
 
 let deferredPrompt = null;
+
 const probeCircle = document.getElementById("probeCircle");
 const upperEl = document.getElementById("upper");
 const buttonsEl = document.getElementById("buttons");
+const rateOut = document.getElementById("rateOut");
+const blocksOut = document.getElementById("blocksOut");
+const recoveryOut = document.getElementById("recoveryOut");
+const gapOut = document.getElementById("gapOut");
+const wrongOut = document.getElementById("wrongOut");
+const fatigueOut = document.getElementById("fatigueOut");
 const statusLine = document.getElementById("statusLine");
 const resultBox = document.getElementById("resultBox");
-const settingsRoot = document.getElementById("settingsRoot");
+const phaseLabel = document.getElementById("phaseLabel");
+const liveChart = document.getElementById("liveChart");
+const lctx = liveChart.getContext("2d");
 const installBtn = document.getElementById("installBtn");
-
-function loadSettings(){ const saved = JSON.parse(localStorage.getItem("blockrate_shape_match_settings") || "null"); return saved ? {...DEFAULTS, ...saved} : {...DEFAULTS}; }
-function saveSettings(){ localStorage.setItem("blockrate_shape_match_settings", JSON.stringify(settings)); }
-function renderSettings(){
-  settingsRoot.innerHTML = "";
-  for(const group of GROUPS){
-    const section = document.createElement("div");
-    section.className = "settings-section";
-    section.innerHTML = `<div class="section-title">${group.title}</div><div class="section-desc">${group.description}</div>`;
-    for(const [key,label,hint] of group.fields){
-      const row = document.createElement("div");
-      row.className = "row";
-      row.innerHTML = `<label for="${key}">${label}<span class="hint">${hint}</span></label><input id="${key}" value="${settings[key]}">`;
-      section.appendChild(row);
-    }
-    settingsRoot.appendChild(section);
-  }
-}
-function readSettingsFromUI(){
-  for(const group of GROUPS){
-    for(const [key] of group.fields){
-      const raw = document.getElementById(key).value.trim();
-      settings[key] = Number(raw);
-      if(Number.isNaN(settings[key])) settings[key] = DEFAULTS[key];
-    }
-  }
-}
-function resetSettings(){ settings = {...DEFAULTS}; renderSettings(); saveSettings(); }
+const fatigueOverlay = document.getElementById("fatigueOverlay");
+const fatigueList = document.getElementById("fatigueList");
 
 function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function clamp(v,lo,hi){ return Math.min(hi, Math.max(lo,v)); }
 function median(arr){ if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; }
 function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function pickDistinctSymbols(count){ return shuffle(SYMBOLS).slice(0,count); }
-
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function renderFatigueChecklist(){
+  fatigueList.innerHTML = "";
+  for(const [score, label] of SAMN_PERELLI){
+    const btn = document.createElement("button");
+    btn.className = "fatigueItem";
+    btn.textContent = `${score}. ${label}`;
+    btn.addEventListener("click", ()=>{
+      state.samnPerelli = { score, label };
+      fatigueOut.textContent = String(score);
+      fatigueOverlay.classList.add("hidden");
+      resultBox.textContent = `Samn–Perelli fatigue rating selected: ${score} — ${label}`;
+      setStatus("Fatigue rating recorded");
+    });
+    fatigueList.appendChild(btn);
+  }
+}
+
 function shapeSvg(shapeId, symbolText=""){
-  const commonStroke='stroke="#111" stroke-width="2" fill="none"';
-  const commonFill='fill="#fff"';
+  const shapeClass='class="shapeStroke"';
   const text = symbolText ? `<text x="50" y="56" text-anchor="middle" class="symbolTxt">${escapeHtml(symbolText)}</text>` : "";
   let shape="";
-  if(shapeId==="circle") shape=`<circle cx="50" cy="50" r="32" ${commonStroke} ${commonFill}/>`;
-  if(shapeId==="square") shape=`<rect x="18" y="18" width="64" height="64" ${commonStroke} ${commonFill}/>`;
-  if(shapeId==="triangle") shape=`<polygon points="50,15 84,82 16,82" ${commonStroke} ${commonFill}/>`;
-  if(shapeId==="diamond") shape=`<polygon points="50,12 86,50 50,88 14,50" ${commonStroke} ${commonFill}/>`;
-  if(shapeId==="hexagon") shape=`<polygon points="30,18 70,18 88,50 70,82 30,82 12,50" ${commonStroke} ${commonFill}/>`;
-  if(shapeId==="star") shape=`<polygon points="50,14 58,38 84,38 63,53 71,79 50,63 29,79 37,53 16,38 42,38" ${commonStroke} ${commonFill}/>`;
-  return `<div class="shapeHolder"><svg class="shapeSvg" viewBox="0 0 100 100">${shape}${text}</svg></div>`;
+  if(shapeId==="square") shape=`<rect x="18" y="18" width="64" height="64" ${shapeClass}/>`;
+  if(shapeId==="triangle") shape=`<polygon points="50,15 84,82 16,82" ${shapeClass}/>`;
+  if(shapeId==="diamond") shape=`<polygon points="50,12 86,50 50,88 14,50" ${shapeClass}/>`;
+  if(shapeId==="hexagon") shape=`<polygon points="30,18 70,18 88,50 70,82 30,82 12,50" ${shapeClass}/>`;
+  if(shapeId==="star") shape=`<polygon points="50,14 58,38 84,38 63,53 71,79 50,63 29,79 37,53 16,38 42,38" ${shapeClass}/>`;
+  if(shapeId==="pentagon") shape=`<polygon points="50,12 85,38 70,85 30,85 15,38" ${shapeClass}/>`;
+  return `<div class="shapeHolder"><svg class="shapeSvg" viewBox="0 0 100 100" aria-hidden="true">${shape}${text}</svg></div>`;
 }
+
 function setStatus(msg){ statusLine.textContent = msg; }
 function clearTimer(){ if(state.trialTimer) clearTimeout(state.trialTimer); state.trialTimer = null; }
 function clearNoResponseTimer(){ if(state.absoluteNoResponseTimer) clearTimeout(state.absoluteNoResponseTimer); state.absoluteNoResponseTimer = null; }
-function armNoResponseTimer(){ clearNoResponseTimer(); state.absoluteNoResponseTimer = setTimeout(()=>{ state.endReason = `No response for more than ${settings.noResponseTimeoutMs} ms`; finish(); }, settings.noResponseTimeoutMs); }
+function armNoResponseTimer(){
+  clearNoResponseTimer();
+  state.absoluteNoResponseTimer = setTimeout(()=>{
+    state.endReason = `No response for more than ${SETTINGS.noResponseTimeoutMs} ms`;
+    finish();
+  }, SETTINGS.noResponseTimeoutMs);
+}
 function noteAnyResponse(){ armNoResponseTimer(); }
 
 function makeTrial(kind){
@@ -126,10 +123,8 @@ function makeTrial(kind){
   const lowerShapes = shuffle(SHAPES);
   const correctUpperIndex = randInt(0,5);
   const correctShapeId = upperShapes[correctUpperIndex];
-  const symbols = pickDistinctSymbols(6);
-  const targetSymbol = symbols[0];
-  const upperSymbols = [];
-  for(let i=0;i<6;i++) upperSymbols.push(symbols[i === correctUpperIndex ? 0 : i]);
+  const upperSymbols = pickDistinctSymbols(6);
+  const targetSymbol = upperSymbols[correctUpperIndex];
   return { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()), kind, upperShapes, upperSymbols, lowerShapes, targetSymbol, correctShapeId, resolved:false };
 }
 function renderProbe(trial){ probeCircle.textContent = trial.targetSymbol; }
@@ -154,15 +149,35 @@ function renderButtons(trial){
     buttonsEl.appendChild(btn);
   }
 }
-function trialMatches(trial, chosenShapeId){ return trial && chosenShapeId === trial.correctShapeId; }
+function drawLive(){
+  lctx.clearRect(0,0,liveChart.width,liveChart.height);
+  lctx.strokeStyle = "#6fd6ff";
+  lctx.lineWidth = 2;
+  lctx.beginPath();
+  state.liveData.forEach((v,i)=>{
+    const x = (i / Math.max(1, state.liveData.length - 1)) * (liveChart.width - 10) + 5;
+    const y = liveChart.height - Math.min(160, v / 8);
+    if(i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y);
+  });
+  lctx.stroke();
+}
+function updateMetrics(){
+  rateOut.textContent = `${(1000/state.duration).toFixed(2)} Hz`;
+  blocksOut.textContent = String(state.overloads.length);
+  recoveryOut.textContent = String(state.recoveries.length);
+  gapOut.textContent = state.lastBlockGap == null ? "—" : `${Math.round(state.lastBlockGap)} ms`;
+  wrongOut.textContent = String(state.lastFiveAnswers.filter(v=>v===false).length);
+  fatigueOut.textContent = state.samnPerelli ? String(state.samnPerelli.score) : "—";
+}
 function recordAnswer(isCorrect){
   state.lastFiveAnswers.push(isCorrect);
-  if(state.lastFiveAnswers.length > settings.wrongWindowSize) state.lastFiveAnswers.shift();
+  if(state.lastFiveAnswers.length > SETTINGS.wrongWindowSize) state.lastFiveAnswers.shift();
+  updateMetrics();
   const wrongCount = state.lastFiveAnswers.filter(v=>v===false).length;
-  if(state.lastFiveAnswers.length === settings.wrongWindowSize && wrongCount > settings.wrongThresholdStop){
+  if(state.lastFiveAnswers.length === SETTINGS.wrongWindowSize && wrongCount > SETTINGS.wrongThresholdStop){
     clearTimer(); clearNoResponseTimer();
     state.phase = "finished";
-    state.endReason = `More than ${settings.wrongThresholdStop} wrong answers out of the last ${settings.wrongWindowSize} answers. Restart required.`;
+    state.endReason = `More than ${SETTINGS.wrongThresholdStop} wrong answers out of the last ${SETTINGS.wrongWindowSize} answers. Restart required.`;
     resultBox.textContent = "Test stopped. Please start over.";
     setStatus(state.endReason);
     return true;
@@ -176,16 +191,28 @@ function openTrial(kind){
   renderProbe(state.current);
   renderUpper(state.current);
   renderButtons(state.current);
-  if(kind === "paced"){ setStatus(`Machine-paced · ${Math.round(state.duration)} ms`); state.trialTimer = setTimeout(onPacedFrameEnd, state.duration); }
-  else if(kind === "recovery"){ setStatus(`Self-paced recovery ${state.recoveryCorrectCompleted + 1}/${settings.recoveryCorrectTrials}`); }
-  else if(kind === "terminal_recovery"){ setStatus(`Final recovery ${state.recoveryCorrectCompleted + 1}/${settings.recoveryCorrectTrials}`); }
+  updateMetrics();
+  drawLive();
+  if (kind === "paced"){
+    phaseLabel.textContent = `Paced · ${Math.round(state.duration)} ms`;
+    setStatus("Machine-paced");
+    state.trialTimer = setTimeout(onPacedFrameEnd, state.duration);
+  } else if (kind === "recovery"){
+    phaseLabel.textContent = `Recovery ${state.recoveryCorrectCompleted + 1}/${SETTINGS.recoveryCorrectTrials}`;
+    setStatus("Self-paced recovery");
+  } else if (kind === "terminal_recovery"){
+    phaseLabel.textContent = `Final recovery ${state.recoveryCorrectCompleted + 1}/${SETTINGS.recoveryCorrectTrials}`;
+    setStatus("Stable blocking gap found");
+  }
 }
+function trialMatches(trial, chosenShapeId){ return trial && chosenShapeId === trial.correctShapeId; }
 function maybeTriggerTerminalRule(){
   if(state.overloads.length < 2) return false;
   const n = state.overloads.length;
   const gap = Math.abs(state.overloads[n-1] - state.overloads[n-2]);
   state.lastBlockGap = gap;
-  if(gap < settings.qualifyingBlockGapMs){
+  updateMetrics();
+  if(gap < SETTINGS.qualifyingBlockGapMs){
     state.qualifyingBlockPair = [state.overloads[n-2], state.overloads[n-1]];
     state.phase = "terminal_recovery";
     state.recoveryCorrectCompleted = 0;
@@ -205,14 +232,14 @@ function handleTap(index){
     if(ok){
       state.current.resolved = true;
       state.recoveryCorrectCompleted += 1;
-      if(state.recoveryCorrectCompleted >= settings.recoveryCorrectTrials){
+      if(state.recoveryCorrectCompleted >= SETTINGS.recoveryCorrectTrials){
         if(state.phase === "terminal_recovery"){
-          state.endReason = `Completed ${settings.recoveryCorrectTrials} final self-paced trials after consecutive blocks under ${settings.qualifyingBlockGapMs} ms apart`;
+          state.endReason = `Completed ${SETTINGS.recoveryCorrectTrials} final self-paced trials after consecutive blocks under ${SETTINGS.qualifyingBlockGapMs} ms apart`;
           finish(); return;
         }
-        state.recoveries.push(state.blockDuration + settings.resumeSlowerByMs);
+        state.recoveries.push(state.blockDuration + SETTINGS.resumeSlowerByMs);
         state.phase = "paced";
-        state.duration = clamp(state.blockDuration + settings.resumeSlowerByMs, settings.minDurationMs, settings.maxDurationMs);
+        state.duration = clamp(state.blockDuration + SETTINGS.resumeSlowerByMs, SETTINGS.minDurationMs, SETTINGS.maxDurationMs);
         setTimeout(()=>openTrial("paced"), 180);
       } else {
         setTimeout(()=>openTrial(state.phase), 160);
@@ -243,7 +270,8 @@ function onPacedFrameEnd(){
   const currentMissed = state.current && state.current.kind==="paced" && !state.current.resolved;
   if(currentMissed){ if(recordAnswer(false)) return; }
   state.unresolvedStreak = currentMissed ? state.unresolvedStreak + 1 : 0;
-  if(state.unresolvedStreak >= settings.consecutiveMissesForBlock){
+  state.liveData.push(state.duration);
+  if(state.unresolvedStreak >= SETTINGS.consecutiveMissesForBlock){
     state.blockDuration = state.duration;
     state.overloads.push(state.blockDuration);
     state.unresolvedStreak = 0;
@@ -253,45 +281,55 @@ function onPacedFrameEnd(){
     openTrial("recovery");
     return;
   }
-  state.duration = clamp(state.duration * settings.speedupFactor, settings.minDurationMs, settings.maxDurationMs);
-  if(state.totalTrials >= settings.maxTrialCount){ state.endReason = "Reached trial cap"; finish(); }
+  state.duration = clamp(state.duration * SETTINGS.speedupFactor, SETTINGS.minDurationMs, SETTINGS.maxDurationMs);
+  if(state.totalTrials >= SETTINGS.maxTrialCount){ state.endReason = "Reached trial cap"; finish(); }
   else openTrial("paced");
 }
 function finish(){
   clearTimer(); clearNoResponseTimer();
   state.phase = "finished";
   const overloadAvg = median(state.overloads) || state.duration;
-  const recoveryAvg = median(state.recoveries) || (overloadAvg + settings.resumeSlowerByMs);
+  const recoveryAvg = median(state.recoveries) || (overloadAvg + SETTINGS.resumeSlowerByMs);
   let threshold = (overloadAvg + recoveryAvg) / 2;
   if(state.qualifyingBlockPair) threshold = (state.qualifyingBlockPair[0] + state.qualifyingBlockPair[1]) / 2;
+  const fatigueText = state.samnPerelli ? `${state.samnPerelli.score} — ${state.samnPerelli.label}` : "not recorded";
   resultBox.textContent =
-`This version lets you change the variables of the test.
+`Themed V5 skin applied.
 
-Current settings:
-${JSON.stringify(settings, null, 2)}
+Task logic:
+- target symbol in center
+- find matching symbol in upper shapes
+- press same shape below
 
-Latest threshold:
+Subjective fatigue:
+Samn–Perelli = ${fatigueText}
+
+Threshold:
 ${threshold.toFixed(1)} ms
 
 End reason:
 ${state.endReason || "Run complete"}`;
 }
 function exportResults(){
-  const blob = new Blob([JSON.stringify({settings, history:state.history}, null, 2)], {type:"application/json"});
+  const blob = new Blob([JSON.stringify({history:state.history, version:"shape-match-v5-fatigue", samnPerelli:state.samnPerelli}, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "blockrate_shape_match_configurable_results.json";
+  a.download = "blockrate_shape_match_v5_fatigue_results.json";
   a.click();
 }
 function emailResults(){
-  const body = encodeURIComponent(JSON.stringify({settings, lastThreshold: state.overloads.slice(-1)[0] || null}, null, 2));
-  window.location.href = `mailto:?subject=BlockRate Shape Match Configurable&body=${body}`;
+  const body = encodeURIComponent(JSON.stringify({version:"shape-match-v5-fatigue", samnPerelli:state.samnPerelli}, null, 2));
+  window.location.href = `mailto:?subject=BlockRate Shape Match V5&body=${body}`;
 }
-async function startTest(){
-  readSettingsFromUI(); saveSettings();
+function startTest(){
+  if(!state.samnPerelli){
+    fatigueOverlay.classList.remove("hidden");
+    setStatus("Select Samn–Perelli fatigue rating first");
+    return;
+  }
   clearTimer(); clearNoResponseTimer();
   state.phase = "paced";
-  state.duration = settings.startDurationMs;
+  state.duration = SETTINGS.startDurationMs;
   state.blockDuration = null;
   state.current = null;
   state.previous = null;
@@ -304,24 +342,19 @@ async function startTest(){
   state.qualifyingBlockPair = null;
   state.endReason = "";
   state.lastFiveAnswers = [];
-  resultBox.textContent = "";
+  resultBox.textContent = `Samn–Perelli fatigue rating selected: ${state.samnPerelli.score} — ${state.samnPerelli.label}`;
   noteAnyResponse();
   openTrial("paced");
 }
 
-document.getElementById("saveSettingsBtn").addEventListener("click", ()=>{ readSettingsFromUI(); saveSettings(); setStatus("Settings saved"); });
-document.getElementById("resetSettingsBtn").addEventListener("click", ()=>{ resetSettings(); setStatus("Settings reset"); });
-document.getElementById("exportSettingsBtn").addEventListener("click", ()=>{ readSettingsFromUI(); const blob = new Blob([JSON.stringify(settings, null, 2)], {type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "blockrate_shape_match_settings.json"; a.click(); });
-document.getElementById("importSettingsBtn").addEventListener("click", ()=>document.getElementById("importSettingsFile").click());
-document.getElementById("importSettingsFile").addEventListener("change", async e=>{ const file=e.target.files[0]; if(!file) return; settings = {...DEFAULTS, ...JSON.parse(await file.text())}; renderSettings(); saveSettings(); setStatus("Settings imported"); });
 document.getElementById("startBtn").addEventListener("click", startTest);
 document.getElementById("exportBtn").addEventListener("click", exportResults);
 document.getElementById("emailBtn").addEventListener("click", emailResults);
 
 window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredPrompt=e; installBtn.disabled=false; });
 installBtn.addEventListener("click", async ()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; });
-
 if("serviceWorker" in navigator){ window.addEventListener("load", ()=>navigator.serviceWorker.register("./sw.js")); }
 
-renderSettings();
+renderFatigueChecklist();
 probeCircle.textContent = "Ready";
+updateMetrics();
