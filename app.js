@@ -272,6 +272,10 @@ function armNoResponseTimer(){
 }
 function noteAnyResponse(){ armNoResponseTimer(); }
 
+function isSelfPacedPhase(){
+  return state.phase === "recovery" || state.phase === "terminal_recovery";
+}
+
 function recordAnswer(isCorrect){
   state.lastFiveAnswers.push(isCorrect);
   if(state.lastFiveAnswers.length > settings.wrongWindowSize) state.lastFiveAnswers.shift();
@@ -295,16 +299,17 @@ function openTrial(kind){
   renderCombinedGrid(state.current);
   updateMetrics();
   drawLive();
+
   if(kind === "paced"){
     phaseLabel.textContent = `Paced · ${Math.round(state.duration)} ms`;
     setStatus("Machine-paced");
     state.trialTimer = setTimeout(onPacedFrameEnd, state.duration);
   } else if(kind === "recovery"){
     phaseLabel.textContent = `Recovery ${state.recoveryCorrectCompleted + 1}/${settings.recoveryCorrectTrials}`;
-    setStatus("Self-paced recovery");
+    setStatus("Self-paced recovery — waiting for response");
   } else if(kind === "terminal_recovery"){
     phaseLabel.textContent = `Final recovery ${state.recoveryCorrectCompleted + 1}/${settings.recoveryCorrectTrials}`;
-    setStatus("Stable blocking gap found");
+    setStatus("Self-paced final recovery — waiting for response");
   }
 }
 
@@ -333,6 +338,7 @@ function handleTap(index){
   noteAnyResponse();
 
   if(state.phase === "recovery" || state.phase === "terminal_recovery"){
+    clearTimer();
     const ok = trialMatches(state.current, index);
     if(recordAnswer(ok)) return;
     if(ok){
@@ -373,6 +379,7 @@ function handleTap(index){
 
 function onPacedFrameEnd(){
   if(state.phase !== "paced") return;
+  if(isSelfPacedPhase()) return;
   state.totalTrials += 1;
   const currentMissed = state.current && state.current.kind==="paced" && !state.current.resolved;
   if(currentMissed){ if(recordAnswer(false)) return; }
@@ -508,7 +515,7 @@ function startTest(){
   state.qualifyingBlockPair = null;
   state.endReason = "";
   state.lastFiveAnswers = [];
-  resultBox.textContent = `Probe-upgraded 4×4 test started.\nSubject ID: ${subjectKey(state.subjectId)}\nSamn–Perelli: ${state.samnPerelli.score} — ${state.samnPerelli.label}`;
+  resultBox.textContent = `Probe-upgraded 4×4 test started. Self-paced phases now wait for response input.\nSubject ID: ${subjectKey(state.subjectId)}\nSamn–Perelli: ${state.samnPerelli.score} — ${state.samnPerelli.label}`;
   noteAnyResponse();
   openTrial("paced");
 }
