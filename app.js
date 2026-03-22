@@ -1,6 +1,3 @@
-// Restored validated logic in one combined 4×4 matrix.
-// 1 probe slot + 6 upper stimulus slots + 6 lower response slots + 3 empty fillers.
-
 const DEFAULTS = {
   adminPasscode: "4822",
   startDurationMs: 800,
@@ -73,7 +70,7 @@ const state = {
   recoveries: [],
   recoveryCorrectCompleted: 0,
   liveData: [],
-  history: JSON.parse(localStorage.getItem("blockrate_restored_4x4_history") || "[]"),
+  history: JSON.parse(localStorage.getItem("blockrate_restored_4x4_probe_upgrade_history") || "[]"),
   oneBackCount: 0,
   onTimeCount: 0,
   totalTrials: 0,
@@ -96,10 +93,10 @@ const adminChart=$("adminChart"), aCtx=adminChart.getContext("2d"), fatigueChart
 let deferredPrompt = null;
 
 function loadSettings(){
-  const saved = JSON.parse(localStorage.getItem("blockrate_restored_4x4_settings") || "null");
+  const saved = JSON.parse(localStorage.getItem("blockrate_restored_4x4_probe_upgrade_settings") || "null");
   return saved ? {...DEFAULTS, ...saved} : {...DEFAULTS};
 }
-function saveSettings(){ localStorage.setItem("blockrate_restored_4x4_settings", JSON.stringify(settings)); }
+function saveSettings(){ localStorage.setItem("blockrate_restored_4x4_probe_upgrade_settings", JSON.stringify(settings)); }
 function subjectKey(id){ return id === "0" ? "Guest" : id; }
 function getSubjectHistory(){ return state.history.filter(x => x.subjectId === subjectKey(state.subjectId || "0")); }
 function computeCPS(avgMs){ return Math.max(0, Math.min(100, ((3000 - avgMs) / 2000) * 100)); }
@@ -221,19 +218,15 @@ function renderCombinedGrid(trial){
   const lowerPos = positions.slice(7,13);
 
   slots[probePos] = {type:"probe", pattern: trial.targetPattern};
-  for(let i=0;i<6;i++){
-    slots[upperPos[i]] = {type:"stimulus", shape: trial.upperShapes[i], pattern: trial.upperItems[i].pattern};
-  }
-  for(let i=0;i<6;i++){
-    slots[lowerPos[i]] = {type:"answer", shape: trial.lowerShapes[i], index:i};
-  }
+  for(let i=0;i<6;i++) slots[upperPos[i]] = {type:"stimulus", shape: trial.upperShapes[i], pattern: trial.upperItems[i].pattern};
+  for(let i=0;i<6;i++) slots[lowerPos[i]] = {type:"answer", shape: trial.lowerShapes[i], index:i};
 
   slots.forEach(slot => {
     const el = document.createElement("div");
     el.className = "slot";
     if(slot.type === "probe"){
       el.classList.add("probe");
-      el.innerHTML = patternSvg(slot.pattern);
+      el.innerHTML = `<div class="probeTag">TARGET</div>${patternSvg(slot.pattern)}`;
     } else if(slot.type === "stimulus"){
       el.innerHTML = shapeSvg(slot.shape, slot.pattern);
     } else if(slot.type === "answer"){
@@ -302,7 +295,6 @@ function openTrial(kind){
   renderCombinedGrid(state.current);
   updateMetrics();
   drawLive();
-
   if(kind === "paced"){
     phaseLabel.textContent = `Paced · ${Math.round(state.duration)} ms`;
     setStatus("Machine-paced");
@@ -426,11 +418,11 @@ function finish(){
     time: new Date().toISOString()
   };
   state.history.push(result);
-  localStorage.setItem("blockrate_restored_4x4_history", JSON.stringify(state.history));
+  localStorage.setItem("blockrate_restored_4x4_probe_upgrade_history", JSON.stringify(state.history));
   updateCPSDisplay(avg2);
   const fatigueText = state.samnPerelli ? `${state.samnPerelli.score} — ${state.samnPerelli.label}` : "not recorded";
   resultBox.textContent =
-`4×4 combined-field build active.
+`Probe-upgraded 4×4 build active.
 
 Subject ID:
 ${result.subjectId}
@@ -452,13 +444,13 @@ function exportResults(){
   const blob = new Blob([JSON.stringify({settings, history:state.history}, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "blockrate_restored_4x4_results.json";
+  a.download = "blockrate_restored_4x4_probe_upgrade_results.json";
   a.click();
 }
 function emailResults(){
   const last = state.history[state.history.length-1] || {};
   const body = encodeURIComponent(JSON.stringify(last, null, 2));
-  window.location.href = `mailto:?subject=BlockRate Restored 4x4&body=${body}`;
+  window.location.href = `mailto:?subject=BlockRate 4x4 Probe Upgrade&body=${body}`;
 }
 
 function drawLineChart(ctx, values, labelText, formatter){
@@ -516,7 +508,7 @@ function startTest(){
   state.qualifyingBlockPair = null;
   state.endReason = "";
   state.lastFiveAnswers = [];
-  resultBox.textContent = `4×4 combined-field test started.\nSubject ID: ${subjectKey(state.subjectId)}\nSamn–Perelli: ${state.samnPerelli.score} — ${state.samnPerelli.label}`;
+  resultBox.textContent = `Probe-upgraded 4×4 test started.\nSubject ID: ${subjectKey(state.subjectId)}\nSamn–Perelli: ${state.samnPerelli.score} — ${state.samnPerelli.label}`;
   noteAnyResponse();
   openTrial("paced");
 }
@@ -563,7 +555,7 @@ $("exportAdminBtn").addEventListener("click", ()=>{
   const blob = new Blob([JSON.stringify({settings, subjectHistory:getSubjectHistory()}, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "blockrate_restored_4x4_admin_export.json";
+  a.download = "blockrate_restored_4x4_probe_upgrade_admin_export.json";
   a.click();
 });
 $("startBtn").addEventListener("click", startTest);

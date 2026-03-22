@@ -5,14 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1830" />
   <link rel="manifest" href="manifest.json" />
-  <title>BlockRate Restored 4x4</title>
+  <title>BlockRate Restored 4x4 Probe Upgrade</title>
   <style>
     :root{
       --bg:#091426; --bg2:#132746; --panel:#0d1b33; --panel2:#10213e;
       --text:#eef7ff; --muted:#9eb7d6; --edge:#28476e; --accent:#67c6ff;
+      --probe:#00eaff;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{margin:0;min-height:100svh;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 50% 12%, rgba(103,198,255,.12), transparent 25%),linear-gradient(135deg,var(--bg2),var(--bg) 58%, #060c16);}
+    body{
+      margin:0;min-height:100svh;color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+      background:
+        radial-gradient(circle at 50% 12%, rgba(103,198,255,.12), transparent 25%),
+        linear-gradient(135deg,var(--bg2),var(--bg) 58%, #060c16);
+    }
     .app{max-width:620px;margin:0 auto;min-height:100svh;padding:14px 14px calc(24px + env(safe-area-inset-bottom));display:grid;gap:14px}
     .topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
     .title{font-size:26px;font-weight:800;text-align:center;margin:0}
@@ -30,10 +37,55 @@
     .fatigueList,.adminSettings{display:grid;gap:10px}
     .fatigueItem{border:1px solid var(--edge);border-radius:16px;padding:14px 12px;background:#0b172a;color:var(--text);text-align:left;font-size:18px;line-height:1.28;cursor:pointer}
     .combinedGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    .slot{min-height:110px;border-radius:18px;border:1px solid var(--edge);background:#0a1629;display:flex;align-items:center;justify-content:center}
-    .slot.probe{background:#0d1b33;border:2px solid rgba(103,198,255,.28)}
+    .slot{
+      min-height:110px;border-radius:18px;border:1px solid var(--edge);
+      background:#0a1629;display:flex;align-items:center;justify-content:center;position:relative;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, border-color .12s ease;
+    }
+    .slot:not(.probe){opacity:.84}
+    .slot.probe{
+      background:radial-gradient(circle at center, rgba(0,255,255,0.35), #0d1b33 60%);
+      border:3px solid var(--probe);
+      box-shadow:
+        0 0 20px rgba(0,234,255,0.9),
+        0 0 45px rgba(0,234,255,0.7),
+        0 0 80px rgba(0,234,255,0.4),
+        inset 0 0 12px rgba(0,234,255,0.5);
+      animation:probePulse 1s ease-in-out infinite;
+      opacity:1;
+      z-index:2;
+    }
+    .probeTag{
+      position:absolute;top:6px;left:50%;transform:translateX(-50%);
+      font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#baf6ff;
+      text-shadow:0 0 8px rgba(0,234,255,.7);
+      pointer-events:none;
+    }
     .slot.answer{cursor:pointer}
     .slot.answer:active{transform:scale(.98)}
+    @keyframes probePulse {
+      0% {
+        transform: scale(1);
+        box-shadow:
+          0 0 20px rgba(0,234,255,0.9),
+          0 0 45px rgba(0,234,255,0.7),
+          0 0 80px rgba(0,234,255,0.4);
+      }
+      50% {
+        transform: scale(1.08);
+        box-shadow:
+          0 0 30px rgba(0,234,255,1),
+          0 0 60px rgba(0,234,255,0.9),
+          0 0 100px rgba(0,234,255,0.6);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow:
+          0 0 20px rgba(0,234,255,0.9),
+          0 0 45px rgba(0,234,255,0.7),
+          0 0 80px rgba(0,234,255,0.4);
+      }
+    }
     .shapeHolder{width:88px;height:88px;display:flex;align-items:center;justify-content:center}
     .shapeSvg{width:84px;height:84px;overflow:visible}
     .shapeStroke{stroke:var(--accent);stroke-width:2.4;fill:#10203d}
@@ -104,8 +156,8 @@ Values are clamped to 0–100.</div>
       <div id="modeLabel">Subject mode</div>
       <div id="phaseLabel">Ready</div>
     </div>
-    <h1 class="title">BlockRate Restored 4×4</h1>
-    <div class="sub">Restored validated logic using one combined 4×4 field with randomized probe and response locations.</div>
+    <h1 class="title">BlockRate 4×4 Probe Upgrade</h1>
+    <div class="sub">Production-safe upgrade: strong glow, pulse, and distinct contrast for an unmissable probe.</div>
 
     <div class="panel">
       <div id="combinedGrid" class="combinedGrid"></div>
@@ -131,7 +183,7 @@ Values are clamped to 0–100.</div>
     </div>
 
     <div class="statusline" id="statusLine"></div>
-    <div class="panel result" id="resultBox">Restored logic: one combined 4×4 field. Probe and response shapes are randomly placed in the matrix.</div>
+    <div class="panel result" id="resultBox">Probe upgrade active: strong glow, pulse animation, and distinct contrast.</div>
   </div>
   <script src="app.js"></script>
 </body>
