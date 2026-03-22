@@ -5,109 +5,50 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1830" />
   <link rel="manifest" href="manifest.json" />
-  <title>BlockRate Clean V3 Polished</title>
+  <title>BlockRate Clean V5</title>
   <style>
     :root{
-      --bg:#091426;
-      --bg2:#132746;
-      --panel:#0d1b33;
-      --panel2:#10213e;
-      --text:#eef7ff;
-      --muted:#9eb7d6;
-      --edge:#28476e;
-      --accent:#67c6ff;
-      --accent2:#2b8cff;
-      --glow:0 0 10px rgba(103,198,255,.35), 0 0 24px rgba(43,140,255,.18);
+      --bg:#091426; --bg2:#132746; --panel:#0d1b33; --panel2:#10213e;
+      --text:#eef7ff; --muted:#9eb7d6; --edge:#28476e; --accent:#67c6ff;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{
-      margin:0;min-height:100svh;color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
-      background:
-        radial-gradient(circle at 50% 12%, rgba(103,198,255,.12), transparent 25%),
-        linear-gradient(135deg,var(--bg2),var(--bg) 58%, #060c16);
-    }
-    .app{
-      max-width:520px;margin:0 auto;min-height:100svh;
-      padding:14px 14px calc(24px + env(safe-area-inset-bottom));
-      display:grid;gap:14px;
-    }
+    body{margin:0;min-height:100svh;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 50% 12%, rgba(103,198,255,.12), transparent 25%),linear-gradient(135deg,var(--bg2),var(--bg) 58%, #060c16);}
+    .app{max-width:520px;margin:0 auto;min-height:100svh;padding:14px 14px calc(24px + env(safe-area-inset-bottom));display:grid;gap:14px}
     .topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
-    .title{font-size:26px;font-weight:800;text-align:center;margin:0;text-shadow:var(--glow)}
+    .title{font-size:26px;font-weight:800;text-align:center;margin:0}
     .sub{font-size:12px;color:var(--muted);text-align:center}
-    .panel{
-      border:1px solid var(--edge);
-      border-radius:24px;
-      padding:16px 12px;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), var(--panel);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 10px 28px rgba(0,0,0,.22);
-    }
+    .panel{border:1px solid var(--edge);border-radius:24px;padding:16px 12px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 10px 28px rgba(0,0,0,.22)}
     .hidden{display:none !important}
-    .overlay{
-      position:fixed;inset:0;z-index:100;display:flex;align-items:flex-start;justify-content:center;
-      padding:12px;background:rgba(2,8,16,.68);backdrop-filter:blur(3px);overflow:auto
-    }
-    .modal{
-      max-width:520px;width:100%;border-radius:24px;padding:16px;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), var(--panel2);
-      border:1px solid var(--edge);box-shadow:0 16px 40px rgba(0,0,0,.3)
-    }
+    .overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:12px;background:rgba(2,8,16,.68);backdrop-filter:blur(3px);overflow:auto}
+    .modal{max-width:520px;width:100%;border-radius:24px;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), var(--panel2);border:1px solid var(--edge);box-shadow:0 16px 40px rgba(0,0,0,.3)}
     .startTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-    .startTitle{font-size:24px;font-weight:800;margin:0;text-shadow:var(--glow)}
+    .startTitle{font-size:24px;font-weight:800;margin:0}
     .smallbtn{font-size:13px;padding:8px 10px;border-radius:12px}
-    .row{display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center;margin-bottom:10px}
-    .row input,.row select{
-      width:100%;padding:10px;border:1px solid var(--edge);border-radius:10px;
-      background:#0a1629;color:var(--text)
-    }
+    .row{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;margin-bottom:10px}
+    .row input,.row select{width:100%;padding:10px;border:1px solid var(--edge);border-radius:10px;background:#0a1629;color:var(--text)}
     .hint{font-size:11px;color:var(--muted)}
     .fatigueList,.adminSettings{display:grid;gap:10px}
-    .fatigueItem{
-      border:1px solid var(--edge);border-radius:16px;padding:14px 12px;
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)), #0b172a;
-      color:var(--text);text-align:left;font-size:18px;line-height:1.28;cursor:pointer
-    }
-    .fatigueItem:active{transform:scale(.995)}
-    #probeWell{
-      margin:2px auto 0;width:190px;height:190px;border-radius:999px;padding:26px;
-      background:radial-gradient(circle at 50% 30%, rgba(103,198,255,.12), transparent 35%), #0b172c;
-      border:1px solid var(--edge);box-shadow:inset 0 0 0 2px rgba(103,198,255,.16), var(--glow)
-    }
-    #probeCircle{
-      width:100%;height:100%;border-radius:999px;display:flex;align-items:center;justify-content:center;
-      border:2px solid rgba(103,198,255,.28);padding:8px;background:#0d1b33
-    }
+    .fatigueItem{border:1px solid var(--edge);border-radius:16px;padding:14px 12px;background:#0b172a;color:var(--text);text-align:left;font-size:18px;line-height:1.28;cursor:pointer}
+    #probeWell{margin:2px auto 0;width:190px;height:190px;border-radius:999px;padding:26px;background:radial-gradient(circle at 50% 30%, rgba(103,198,255,.12), transparent 35%), #0b172c;border:1px solid var(--edge)}
+    #probeCircle{width:100%;height:100%;border-radius:999px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(103,198,255,.28);padding:8px;background:#0d1b33}
     .wells{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .well{
-      aspect-ratio:1/1;border-radius:999px;padding:18px;border:2px solid rgba(103,198,255,.14);
-      background:radial-gradient(circle at 50% 35%, rgba(103,198,255,.08), transparent 38%), #0d1b33
-    }
+    .well{aspect-ratio:1/1;border-radius:999px;padding:18px;border:2px solid rgba(103,198,255,.14);background:radial-gradient(circle at 50% 35%, rgba(103,198,255,.08), transparent 38%), #0d1b33}
     .ringgrid{height:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center;justify-items:center}
-    .cell,.btncell{
-      width:100%;min-height:78px;border-radius:18px;border:1px solid var(--edge);
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), #0a1629;
-      display:flex;align-items:center;justify-content:center
-    }
+    .cell,.btncell{width:100%;min-height:78px;border-radius:18px;border:1px solid var(--edge);background:#0a1629;display:flex;align-items:center;justify-content:center}
     .btncell{cursor:pointer}
-    .btncell:active{transform:scale(.97)}
     .shapeHolder{width:80px;height:80px;display:flex;align-items:center;justify-content:center}
-    .shapeSvg{width:76px;height:76px;overflow:visible;filter:drop-shadow(0 0 8px rgba(103,198,255,.18))}
+    .shapeSvg{width:76px;height:76px;overflow:visible}
     .shapeStroke{stroke:var(--accent);stroke-width:2.4;fill:#10203d}
     .metrics{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;font-size:11px;color:var(--muted);text-align:center}
-    .metric{
-      padding:10px 6px;border-radius:16px;border:1px solid var(--edge);
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)), #0d1b33
-    }
-    .metric strong{display:block;color:var(--text);font-size:15px;margin-top:4px;text-shadow:var(--glow)}
+    .metric{padding:10px 6px;border-radius:16px;border:1px solid var(--edge);background:#0d1b33}
+    .metric strong{display:block;color:var(--text);font-size:15px;margin-top:4px}
     canvas{width:100%;height:180px;border:1px solid var(--edge);border-radius:22px;background:#0a1629}
     .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    button{
-      border:1px solid var(--edge);border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), #0d1b33;
-      color:var(--text);font-size:15px;padding:12px 10px
-    }
+    button{border:1px solid var(--edge);border-radius:14px;background:#0d1b33;color:var(--text);font-size:15px;padding:12px 10px}
     .statusline{text-align:center;font-size:14px;color:var(--muted);min-height:20px}
     .result{font-size:14px;line-height:1.45;white-space:pre-line}
     .sectionTitle{font-size:15px;font-weight:700;margin-top:10px}
+    .formula{font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-line}
   </style>
 </head>
 <body>
@@ -142,6 +83,12 @@
         <div class="adminSettings" id="adminSettings"></div>
         <div class="sectionTitle">Performance Graphs</div>
         <canvas id="adminChart" width="420" height="180"></canvas>
+        <div id="last2AvgBox" class="formula"></div>
+        <div class="formula">Cognitive Performance Score (CPS)
+CPS = ((3000 - average of last 2 blocking scores in ms) / 2000) × 100
+1000 ms = 100
+3000 ms = 0
+Values are clamped to 0–100.</div>
         <div class="sectionTitle">S-PF Graph</div>
         <canvas id="fatigueChart" width="420" height="180"></canvas>
         <div class="controls" style="margin-top:12px">
@@ -159,8 +106,8 @@
       <div id="modeLabel">Subject mode</div>
       <div id="phaseLabel">Ready</div>
     </div>
-    <h1 class="title">BlockRate Clean V3 Polished</h1>
-    <div class="sub">Blue polished interface, commented code, stable core task.</div>
+    <h1 class="title">BlockRate Clean V5</h1>
+    <div class="sub">Validated build with initial self-paced calibration restored.</div>
 
     <div class="panel">
       <div id="probeWell"><div id="probeCircle">Ready</div></div>
@@ -175,7 +122,7 @@
       <div class="metric">Blocks<strong id="blocksOut">0</strong></div>
       <div class="metric">Recoveries<strong id="recoveryOut">0</strong></div>
       <div class="metric">Gap<strong id="gapOut">—</strong></div>
-      <div class="metric">Wrong 5<strong id="wrongOut">0</strong></div>
+      <div class="metric">Wrong<strong id="wrongOut">0</strong></div>
       <div class="metric">S-PF<strong id="fatigueOut">—</strong></div>
       <div class="metric">CPS<strong id="cpsOut">—</strong></div>
     </div>
@@ -190,7 +137,7 @@
     </div>
 
     <div class="statusline" id="statusLine"></div>
-    <div class="panel result" id="resultBox">Ready</div>
+    <div class="panel result" id="resultBox">Calibration rule: 1 unused self-paced trial, then average next 20 self-paced trials, then start paced mode at 80% of that average.</div>
   </div>
   <script src="app.js"></script>
 </body>

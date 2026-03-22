@@ -1,4 +1,4 @@
-const CACHE = "blockrate-clean-v3-polished";
+const CACHE = "blockrate-clean-v5-calibrated";
 const ASSETS = ["./","./index.html","./app.js","./manifest.json"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(self.clients.claim()); });
