@@ -1,1 +1,8 @@
-{"name": "BlockRate Corrected Verified v8", "short_name": "BlockRateV8", "start_url": "./index.html", "display": "standalone", "background_color": "#0b1830", "theme_color": "#0b1830"}
+{
+  "name": "BlockRate Minimum Rebuild v9",
+  "short_name": "BlockRateV9",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1830",
+  "theme_color": "#0b1830"
+}

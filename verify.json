@@ -1,0 +1,114 @@
+{
+  "version_badge": "MINIMUM REBUILD v9",
+  "app_title": "BlockRate Corrected Verified v8",
+  "manifest_name": "BlockRate Minimum Rebuild v9",
+  "sw_cache": "blockrate-minimum-rebuild-v9",
+  "admin_saves_persist_as_defaults": true,
+  "calibration_rule": {
+    "ignore_first_self_paced": 1,
+    "average_next_self_paced": 20,
+    "machine_paced_start_percent": 70
+  },
+  "line_patterns": {
+    "3": [
+      [
+        "v",
+        50,
+        30
+      ],
+      [
+        "v",
+        50,
+        50
+      ],
+      [
+        "v",
+        50,
+        70
+      ]
+    ],
+    "4": [
+      [
+        "v",
+        34,
+        34
+      ],
+      [
+        "v",
+        66,
+        34
+      ],
+      [
+        "v",
+        34,
+        66
+      ],
+      [
+        "v",
+        66,
+        66
+      ]
+    ],
+    "5": [
+      [
+        "v",
+        34,
+        34
+      ],
+      [
+        "v",
+        66,
+        34
+      ],
+      [
+        "v",
+        50,
+        50
+      ],
+      [
+        "v",
+        34,
+        66
+      ],
+      [
+        "v",
+        66,
+        66
+      ]
+    ],
+    "6": [
+      [
+        "v",
+        34,
+        25
+      ],
+      [
+        "v",
+        66,
+        25
+      ],
+      [
+        "v",
+        34,
+        50
+      ],
+      [
+        "v",
+        66,
+        50
+      ],
+      [
+        "v",
+        34,
+        75
+      ],
+      [
+        "v",
+        66,
+        75
+      ]
+    ]
+  },
+  "refresher": "one large box with dot -> line matches 1-6",
+  "live_trials_use_same_line_patterns": true
+}
