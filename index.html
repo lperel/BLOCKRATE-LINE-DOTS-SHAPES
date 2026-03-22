@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1830" />
   <link rel="manifest" href="manifest.json" />
-  <title>BlockRate 4×4 Probe Upgrade v5</title>
+  <title>BlockRate 4×4 Probe Upgrade v6</title>
   <style>
     :root{
       --bg:#091426; --bg2:#132746; --panel:#0d1b33; --panel2:#10213e;
@@ -75,6 +75,32 @@
     </div>
   </div>
 
+  
+  <div id="refresherOverlay" class="overlay hidden">
+    <div class="modal">
+      <h2 style="margin:2px 0 8px;text-align:center">Pattern Refresher</h2>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:12px">Review the dot and line quantity patterns before testing.</div>
+      <div class="panel" style="padding:12px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="text-align:center;color:var(--muted);font-size:12px;margin-bottom:8px">Dots 1–6</div>
+            <div id="refresherDots" class="combinedGrid" style="grid-template-columns:repeat(3,1fr)"></div>
+          </div>
+          <div>
+            <div style="text-align:center;color:var(--muted);font-size:12px;margin-bottom:8px">Lines 1–6</div>
+            <div id="refresherLines" class="combinedGrid" style="grid-template-columns:repeat(3,1fr)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="skipRefresherBtn">Skip</button>
+        <button id="continueRefresherBtn">Continue to Test</button>
+        <div></div><div></div>
+      </div>
+    </div>
+  </div>
+
+
   <div id="fatigueOverlay" class="overlay hidden">
     <div class="modal">
       <h2 style="margin:2px 0 8px;text-align:center">S-PF Checklist</h2>
@@ -117,8 +143,8 @@ Values are clamped to 0–100.</div>
       <div id="modeLabel">Subject mode</div>
       <div id="phaseLabel">Ready</div>
     </div>
-    <h1 class="title">BlockRate 4×4 Probe Upgrade v5</h1>
-    <div class="sub">Admin saves become the new default on this device. Initial machine-paced value is calculated from calibration at 70% of the average, not manually set.</div>
+    <h1 class="title">BlockRate 4×4 Probe Upgrade v6</h1>
+    <div class="sub">Admin saves become the new default on this device. Includes a pre-test refresher panel showing dot and line quantities 1–6.</div>
     <div class="panel"><div id="combinedGrid" class="combinedGrid"></div></div>
     <div class="metrics">
       <div class="metric">Rate<strong id="rateOut">—</strong></div>

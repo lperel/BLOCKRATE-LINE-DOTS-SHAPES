@@ -74,7 +74,7 @@ const state = {
   recoveries: [],
   recoveryCorrectCompleted: 0,
   liveData: [],
-  history: JSON.parse(localStorage.getItem("blockrate_restored_4x4_probe_upgrade_v5_lines_history") || "[]"),
+  history: JSON.parse(localStorage.getItem("blockrate_restored_4x4_probe_upgrade_v6_refresher_history") || "[]"),
   oneBackCount: 0,
   onTimeCount: 0,
   totalTrials: 0,
@@ -101,10 +101,10 @@ const adminChart=$("adminChart"), aCtx=adminChart.getContext("2d"), fatigueChart
 let deferredPrompt = null;
 
 function loadSettings(){
-  const saved = JSON.parse(localStorage.getItem("blockrate_restored_4x4_probe_upgrade_v5_lines_settings") || "null");
+  const saved = JSON.parse(localStorage.getItem("blockrate_restored_4x4_probe_upgrade_v6_refresher_settings") || "null");
   return saved ? {...DEFAULTS, ...saved} : {...DEFAULTS};
 }
-function saveSettings(){ localStorage.setItem("blockrate_restored_4x4_probe_upgrade_v5_lines_settings", JSON.stringify(settings)); }
+function saveSettings(){ localStorage.setItem("blockrate_restored_4x4_probe_upgrade_v6_refresher_settings", JSON.stringify(settings)); }
 function subjectKey(id){ return id === "0" ? "Guest" : id; }
 function getSubjectHistory(){ return state.history.filter(x => x.subjectId === subjectKey(state.subjectId || "0")); }
 function computeCPS(avgMs){ return Math.max(0, Math.min(100, ((3000 - avgMs) / 2000) * 100)); }
@@ -175,6 +175,27 @@ function patternSvg(pattern){
       return "";
     }).join("")
   }</svg></div>`;
+}
+
+function renderRefresher(){
+  const dotsWrap = $("refresherDots");
+  const linesWrap = $("refresherLines");
+  if(!dotsWrap || !linesWrap) return;
+  dotsWrap.innerHTML = "";
+  linesWrap.innerHTML = "";
+  for(let i=1;i<=6;i++){
+    const d = document.createElement("div");
+    d.className = "slot";
+    d.style.minHeight = "95px";
+    d.innerHTML = `<div style="position:absolute;top:6px;left:8px;font-size:10px;color:var(--muted)">${i}</div>${patternSvg(DOT_PATTERNS[i])}`;
+    dotsWrap.appendChild(d);
+
+    const l = document.createElement("div");
+    l.className = "slot";
+    l.style.minHeight = "95px";
+    l.innerHTML = `<div style="position:absolute;top:6px;left:8px;font-size:10px;color:var(--muted)">${i}</div>${patternSvg(LINE_PATTERNS[i])}`;
+    linesWrap.appendChild(l);
+  }
 }
 
 function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
@@ -479,11 +500,11 @@ function finish(){
     time: new Date().toISOString()
   };
   state.history.push(result);
-  localStorage.setItem("blockrate_restored_4x4_probe_upgrade_v5_lines_history", JSON.stringify(state.history));
+  localStorage.setItem("blockrate_restored_4x4_probe_upgrade_v6_refresher_history", JSON.stringify(state.history));
   updateCPSDisplay(avg2);
   const fatigueText = state.samnPerelli ? `${state.samnPerelli.score} — ${state.samnPerelli.label}` : "not recorded";
   resultBox.textContent =
-`4×4 probe-upgraded v5 build active.
+`4×4 probe-upgraded v6 build active.
 
 Subject ID:
 ${result.subjectId}
@@ -508,13 +529,13 @@ function exportResults(){
   const blob = new Blob([JSON.stringify({settings, history:state.history}, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "blockrate_restored_4x4_probe_upgrade_v5_lines_results.json";
+  a.download = "blockrate_restored_4x4_probe_upgrade_v6_refresher_results.json";
   a.click();
 }
 function emailResults(){
   const last = state.history[state.history.length-1] || {};
   const body = encodeURIComponent(JSON.stringify(last, null, 2));
-  window.location.href = `mailto:?subject=BlockRate 4x4 Probe Upgrade v5&body=${body}`;
+  window.location.href = `mailto:?subject=BlockRate 4x4 Probe Upgrade v6&body=${body}`;
 }
 
 function drawLineChart(ctx, values, labelText, formatter){
@@ -585,7 +606,7 @@ $("subjectNextBtn").addEventListener("click", ()=>{
   if(raw === "0"){
     state.subjectId = "0";
     $("subjectOverlay").classList.add("hidden");
-    $("fatigueOverlay").classList.remove("hidden");
+    $("refresherOverlay").classList.remove("hidden");
     setStatus("Guest session");
     return;
   }
@@ -595,9 +616,21 @@ $("subjectNextBtn").addEventListener("click", ()=>{
   }
   state.subjectId = raw.toUpperCase();
   $("subjectOverlay").classList.add("hidden");
-  $("fatigueOverlay").classList.remove("hidden");
+  $("refresherOverlay").classList.remove("hidden");
   setStatus(`Subject ID set: ${state.subjectId}`);
 });
+
+$("skipRefresherBtn").addEventListener("click", ()=>{
+  $("refresherOverlay").classList.add("hidden");
+  $("fatigueOverlay").classList.remove("hidden");
+  setStatus("Refresher skipped");
+});
+$("continueRefresherBtn").addEventListener("click", ()=>{
+  $("refresherOverlay").classList.add("hidden");
+  $("fatigueOverlay").classList.remove("hidden");
+  setStatus("Refresher complete");
+});
+
 $("adminOpenBtn").addEventListener("click", ()=>{
   $("adminOverlay").classList.remove("hidden");
   $("adminGate").classList.remove("hidden");
@@ -627,7 +660,7 @@ $("exportAdminBtn").addEventListener("click", ()=>{
   const blob = new Blob([JSON.stringify({settings, subjectHistory:getSubjectHistory()}, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "blockrate_restored_4x4_probe_upgrade_v5_lines_admin_export.json";
+  a.download = "blockrate_restored_4x4_probe_upgrade_v6_refresher_admin_export.json";
   a.click();
 });
 $("startBtn").addEventListener("click", startTest);
@@ -639,4 +672,5 @@ if("serviceWorker" in navigator){ window.addEventListener("load", ()=>navigator.
 
 modeLabel.textContent = "Subject mode";
 renderFatigueChecklist();
+renderRefresher();
 updateMetrics();
