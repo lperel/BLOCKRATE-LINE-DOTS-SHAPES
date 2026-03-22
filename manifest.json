@@ -1,6 +1,6 @@
 {
-  "name": "BlockRate Minimum Rebuild v9",
-  "short_name": "BlockRateV9",
+  "name": "BlockRate v10 Wider Lines",
+  "short_name": "BlockRateV10",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b1830",
