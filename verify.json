@@ -1,18 +1,9 @@
 {
-  "version_badge": "V19 SCREEN FIT",
-  "manifest_name": "BlockRate v19 Screen Fit",
-  "sw_cache": "blockrate-v19-screen-fit",
-  "change": "Checked and tightened scaling across all pages for smartphone fit.",
-  "screen_fit": {
-    "app_max_width": 430,
-    "overlay_modal_max_widths": [
-      "96vw / 520px",
-      "96vw / 430px"
-    ],
-    "combined_grid_kept_4_columns": true,
-    "small_screen_two_column_controls": true,
-    "smaller_trial_slots": true,
-    "smaller_refresher_cards": true,
-    "smaller_icons": true
+  "version_badge": "V20",
+  "manifest_name": "BlockRate v20",
+  "sw_cache": "blockrate-v20",
+  "change": "Default no-response timeout changed to 20000 ms.",
+  "defaults": {
+    "noResponseTimeoutMs": 20000
   }
 }
