@@ -1,9 +1,6 @@
 {
-  "version_badge": "V20",
-  "manifest_name": "BlockRate v20",
-  "sw_cache": "blockrate-v20",
-  "change": "Default no-response timeout changed to 20000 ms.",
-  "defaults": {
-    "noResponseTimeoutMs": 20000
-  }
+  "version_badge": "V21",
+  "manifest_name": "BlockRate v21",
+  "sw_cache": "blockrate-v21",
+  "change": "Forced visible version labels across app pages to V21. noResponseTimeoutMs remains 20000."
 }
