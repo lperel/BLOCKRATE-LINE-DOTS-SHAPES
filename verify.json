@@ -1,10 +1,24 @@
 {
-  "version_badge": "V14 GEO QUIET",
-  "manifest_name": "BlockRate v14 Geo Quiet",
-  "sw_cache": "blockrate-v14-geo-quiet",
-  "change": "Capture geolocation/time for results and hide info panels while test is in progress.",
-  "admin_saves_persist_as_defaults": true,
-  "results_page": true,
-  "geo_capture": true,
-  "quiet_during_test": true
+  "version_badge": "V15 NEW DEFAULTS",
+  "manifest_name": "BlockRate v15 New Defaults",
+  "sw_cache": "blockrate-v15-new-defaults",
+  "change": "Updated built-in default parameters to requested values.",
+  "defaults": {
+    "speedupFactor": 0.8,
+    "resumeSlowerByMs": 400,
+    "consecutiveMissesForBlock": 2,
+    "recoveryCorrectTrials": 2,
+    "qualifyingBlockGapMs": 250,
+    "noResponseTimeoutMs": 10026,
+    "wrongWindowSize": 5,
+    "wrongThresholdStop": 4,
+    "maxTrialCount": 180,
+    "minDurationMs": 45000,
+    "maxDurationMs": 180000,
+    "initialUnusedCalibrationTrials": 1,
+    "initialMeasuredCalibrationTrials": 20,
+    "initialPacedPercent": 0.7,
+    "calibrationStopErrors": 5,
+    "calibrationStopSlowMs": 8000
+  }
 }
