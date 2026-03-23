@@ -1,6 +1,6 @@
 {
-  "name": "BlockRate v11 Navigation",
-  "short_name": "BlockRateV11",
+  "name": "BlockRate v14 Geo Quiet",
+  "short_name": "BlockRateV14",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b1830",

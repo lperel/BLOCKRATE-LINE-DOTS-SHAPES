@@ -1,21 +1,10 @@
 {
-  "version_badge": "V11 NAVIGATION",
-  "manifest_name": "BlockRate v11 Navigation",
-  "sw_cache": "blockrate-v11-navigation",
+  "version_badge": "V14 GEO QUIET",
+  "manifest_name": "BlockRate v14 Geo Quiet",
+  "sw_cache": "blockrate-v14-geo-quiet",
+  "change": "Capture geolocation/time for results and hide info panels while test is in progress.",
   "admin_saves_persist_as_defaults": true,
-  "navigation": {
-    "back_to_start_on_refresher": true,
-    "back_to_start_on_fatigue": true,
-    "back_to_start_on_admin": true,
-    "back_to_start_on_live_page": true,
-    "start_over_on_refresher": true,
-    "start_over_on_fatigue": true,
-    "start_over_on_admin": true,
-    "start_over_on_live_page": true
-  },
-  "calibration_rule": {
-    "ignore_first_self_paced": 1,
-    "average_next_self_paced": 20,
-    "machine_paced_start_percent": 70
-  }
+  "results_page": true,
+  "geo_capture": true,
+  "quiet_during_test": true
 }

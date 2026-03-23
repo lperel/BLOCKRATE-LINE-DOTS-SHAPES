@@ -5,10 +5,10 @@ const SHAPES=["square","triangle_down","diamond","pentagon","hexagon","triangle_
 const SAMN_PERELLI=[[7,"Full alert, wide awake"],[6,"Very lively, responsive, but not at peak"],[5,"Okay, about normal"],[4,"Less than sharp, let down"],[3,"Feeling dull, losing focus"],[2,"Very difficult to concentrate, groggy"],[1,"Unable to function, ready to drop"]];
 const DOT_PATTERNS={1:[["dot",50,50]],2:[["dot",34,50],["dot",66,50]],3:[["dot",50,30],["dot",50,50],["dot",50,70]],4:[["dot",34,34],["dot",66,34],["dot",34,66],["dot",66,66]],5:[["dot",34,34],["dot",66,34],["dot",50,50],["dot",34,66],["dot",66,66]],6:[["dot",34,25],["dot",66,25],["dot",34,50],["dot",66,50],["dot",34,75],["dot",66,75]]};
 const LINE_PATTERNS={1:[["v",50,50]],2:[["v",28,50],["v",72,50]],3:[["v",20,50],["v",50,50],["v",80,50]],4:[["v",28,30],["v",72,30],["v",28,70],["v",72,70]],5:[["v",28,28],["v",72,28],["v",50,50],["v",28,72],["v",72,72]],6:[["v",28,22],["v",72,22],["v",28,50],["v",72,50],["v",28,78],["v",72,78]]};
-const state={phase:"idle",duration:null,blockDuration:null,current:null,previous:null,unresolvedStreak:0,overloads:[],recoveries:[],recoveryCorrectCompleted:0,history:JSON.parse(localStorage.getItem("blockrate_v11_navigation_history")||"[]"),totalTrials:0,trialTimer:null,absoluteNoResponseTimer:null,lastFiveAnswers:[],samnPerelli:null,subjectId:null,calibrationTrialIndex:0,calibrationRTs:[],calibrationErrors:0,trialOpenedAt:null};
-const $=id=>document.getElementById(id),combinedGrid=$("combinedGrid"),rateOut=$("rateOut"),blocksOut=$("blocksOut"),recoveryOut=$("recoveryOut"),wrongOut=$("wrongOut"),fatigueOut=$("fatigueOut"),cpsOut=$("cpsOut"),statusLine=$("statusLine"),resultBox=$("resultBox"),phaseLabel=$("phaseLabel"),modeLabel=$("modeLabel"); let deferredPrompt=null;
-function loadSettings(){const s=JSON.parse(localStorage.getItem("blockrate_v11_navigation_settings")||"null");return s?{...DEFAULTS,...s}:{...DEFAULTS}}
-function saveSettings(){localStorage.setItem("blockrate_v11_navigation_settings",JSON.stringify(settings))}
+const state={phase:"idle",duration:null,blockDuration:null,current:null,previous:null,unresolvedStreak:0,overloads:[],recoveries:[],recoveryCorrectCompleted:0,history:JSON.parse(localStorage.getItem("blockrate_v14_geo_quiet_history")||"[]"),totalTrials:0,trialTimer:null,absoluteNoResponseTimer:null,lastFiveAnswers:[],samnPerelli:null,subjectId:null,calibrationTrialIndex:0,calibrationRTs:[],calibrationErrors:0,trialOpenedAt:null};
+const $=id=>document.getElementById(id),combinedGrid=$("combinedGrid"),rateOut=$("rateOut"),blocksOut=$("blocksOut"),recoveryOut=$("recoveryOut"),wrongOut=$("wrongOut"),fatigueOut=$("fatigueOut"),cpsOut=$("cpsOut"),statusLine=$("statusLine"),resultBox=$("resultBox"),phaseLabel=$("phaseLabel"),modeLabel=$("modeLabel"),infoPanel=$("infoPanel"); let deferredPrompt=null;
+function loadSettings(){const s=JSON.parse(localStorage.getItem("blockrate_v14_geo_quiet_settings")||"null");return s?{...DEFAULTS,...s}:{...DEFAULTS}}
+function saveSettings(){localStorage.setItem("blockrate_v14_geo_quiet_settings",JSON.stringify(settings))}
 function computeCPS(avgMs){return Math.max(0,Math.min(100,((3000-avgMs)/2000)*100))}
 function updateCPSDisplay(avg){cpsOut.textContent=avg!=null?computeCPS(avg).toFixed(0):"—"}
 function setStatus(m){statusLine.textContent=m}
@@ -43,8 +43,15 @@ function clearCurrentSession(){
   updateMetrics();
   combinedGrid.innerHTML="";
 }
+
+function showResultsPage(text){
+  const box = $("resultsPageBox");
+  if(box) box.textContent = text;
+  showOnly("resultsOverlay");
+}
+
 function showOnly(overlayId){
-  ["subjectOverlay","refresherOverlay","fatigueOverlay","adminOverlay"].forEach(id=>{
+  ["subjectOverlay","refresherOverlay","fatigueOverlay","resultsOverlay","adminOverlay"].forEach(id=>{
     const el=$(id);
     if(!el) return;
     if(id===overlayId) el.classList.remove("hidden");
@@ -53,7 +60,7 @@ function showOnly(overlayId){
 }
 function goToStartPage(){
   clearCurrentSession();
-  resultBox.textContent="V11 navigation build active.";
+  resultBox.textContent="V14 geo-quiet build active.";
   setStatus("Returned to start page");
   showOnly("subjectOverlay");
 }
@@ -63,7 +70,7 @@ function startOverFlow(){
   state.samnPerelli=null;
   fatigueOut.textContent="—";
   $("subjectIdInput").value="";
-  resultBox.textContent="Session cleared. Start over from subject ID.";
+  resultBox.textContent="Session cleared. Start over from subject ID.";setTestingQuiet(false);
   setStatus("Start over");
   showOnly("subjectOverlay");
 }
@@ -97,7 +104,7 @@ if(state.current&&state.current.kind==="paced"&&!state.current.resolved&&trialMa
 recordAnswer(false)}
 function onPacedFrameEnd(){if(state.phase!=="paced")return;state.totalTrials+=1;const currentMissed=state.current&&state.current.kind==="paced"&&!state.current.resolved;if(currentMissed){if(recordAnswer(false))return}state.unresolvedStreak=currentMissed?state.unresolvedStreak+1:0;if(state.unresolvedStreak>=settings.consecutiveMissesForBlock){state.blockDuration=state.duration;state.overloads.push(state.blockDuration);state.unresolvedStreak=0;updateCPSDisplay(avgLast2Blocks());if(maybeTriggerTerminalRule())return;state.phase="recovery";state.recoveryCorrectCompleted=0;openTrial("recovery");return}state.duration=clamp(state.duration*settings.speedupFactor,settings.minDurationMs,settings.maxDurationMs);if(state.totalTrials>=settings.maxTrialCount){state.endReason="Reached trial cap";finish()}else openTrial("paced")}
 function avgLast2Blocks(){if(state.overloads.length<2)return state.overloads.length?state.overloads[state.overloads.length-1]:null;return (state.overloads[state.overloads.length-1]+state.overloads[state.overloads.length-2])/2}
-function finish(){clearTimer();clearNoResponseTimer();state.phase="finished";const avg2=avgLast2Blocks(),cps=avg2!=null?computeCPS(avg2):null;const result={subjectId:subjectKey(state.subjectId||"0"),samnPerelli:state.samnPerelli,calibrationAverageMs:state.calibrationRTs.length?mean(state.calibrationRTs):null,blocks:[...state.overloads],averageLast2BlockingScoresMs:avg2,cognitivePerformanceScore:cps,endReason:state.endReason||"Run complete",time:new Date().toISOString()};state.history.push(result);localStorage.setItem("blockrate_v11_navigation_history",JSON.stringify(state.history));updateCPSDisplay(avg2);const fatigueText=state.samnPerelli?`${state.samnPerelli.score} — ${state.samnPerelli.label}`:"not recorded";resultBox.textContent=`V11 navigation build active.
+function finish(){clearTimer();clearNoResponseTimer();state.phase="finished";const avg2=avgLast2Blocks(),cps=avg2!=null?computeCPS(avg2):null;const result={subjectId:subjectKey(state.subjectId||"0"),samnPerelli:state.samnPerelli,calibrationAverageMs:state.calibrationRTs.length?mean(state.calibrationRTs):null,blocks:[...state.overloads],averageLast2BlockingScoresMs:avg2,cognitivePerformanceScore:cps,endReason:state.endReason||"Run complete",time:new Date().toISOString()};state.history.push(result);localStorage.setItem("blockrate_v14_geo_quiet_history",JSON.stringify(state.history));updateCPSDisplay(avg2);const fatigueText=state.samnPerelli?`${state.samnPerelli.score} — ${state.samnPerelli.label}`:"not recorded";resultBox.textContent=`V14 geo-quiet build active.
 
 Subject ID:
 ${result.subjectId}
@@ -116,8 +123,8 @@ ${cps!=null?cps.toFixed(1):"—"}
 
 End reason:
 ${result.endReason}`}
-function exportResults(){const blob=new Blob([JSON.stringify({settings,history:state.history},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="blockrate_v11_navigation_results.json";a.click()}
-function emailResults(){const last=state.history[state.history.length-1]||{},body=encodeURIComponent(JSON.stringify(last,null,2));window.location.href=`mailto:?subject=BlockRate v11 Navigation&body=${body}`}
+function exportResults(){const blob=new Blob([JSON.stringify({settings,history:state.history},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="blockrate_v14_geo_quiet_results.json";a.click()}
+function emailResults(){const last=state.history[state.history.length-1]||{},body=encodeURIComponent(JSON.stringify(last,null,2));window.location.href=`mailto:?subject=BlockRate v14 Geo Quiet&body=${body}`}
 function startTest(){if(!state.subjectId){$("subjectOverlay").classList.remove("hidden");setStatus("Enter Subject ID first");return}if(!state.samnPerelli){$("fatigueOverlay").classList.remove("hidden");setStatus("Select Samn–Perelli fatigue rating first");return}clearTimer();clearNoResponseTimer();state.phase="calibration";state.duration=null;state.blockDuration=null;state.current=null;state.previous=null;state.unresolvedStreak=0;state.overloads=[];state.recoveries=[];state.recoveryCorrectCompleted=0;state.totalTrials=0;state.endReason="";state.lastFiveAnswers=[];state.calibrationTrialIndex=0;state.calibrationRTs=[];state.calibrationErrors=0;resultBox.textContent=`Calibration starting.
 Ignore the first self-paced trial.
 Average the next ${settings.initialMeasuredCalibrationTrials} self-paced trials.
@@ -130,7 +137,7 @@ $("unlockBtn").onclick=()=>{if($("adminPass").value===settings.adminPasscode){$(
 $("closeAdminBtn").onclick=()=>$("adminOverlay").classList.add("hidden");$("closeAdminBtn2").onclick=()=>$("adminOverlay").classList.add("hidden");
 $("saveAdminBtn").onclick=()=>{readAdmin();saveSettings();renderAdmin();setStatus("Admin settings saved as the new default on this device")};
 $("resetAdminBtn").onclick=()=>{resetAdmin();setStatus("Admin settings reset")};
-$("exportAdminBtn").onclick=()=>{const blob=new Blob([JSON.stringify(settings,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="blockrate_v11_navigation_admin_export.json";a.click()};
-$("startBtn").onclick=startTest;$("exportBtn").onclick=exportResults;$("emailBtn").onclick=emailResults;$("backToStartBtn").onclick=goToStartPage;$("startOverBtn").onclick=startOverFlow;$("refBackBtn").onclick=goToStartPage;$("refStartOverBtn").onclick=startOverFlow;$("fatigueBackBtn").onclick=goToStartPage;$("fatigueStartOverBtn").onclick=startOverFlow;$("adminBackBtn").onclick=goToStartPage;$("adminStartOverBtn").onclick=startOverFlow;
+$("exportAdminBtn").onclick=()=>{const blob=new Blob([JSON.stringify(settings,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="blockrate_v14_geo_quiet_admin_export.json";a.click()};
+$("startBtn").onclick=startTest;$("exportBtn").onclick=exportResults;$("emailBtn").onclick=emailResults;$("backToStartBtn").onclick=goToStartPage;$("startOverBtn").onclick=startOverFlow;$("refBackBtn").onclick=goToStartPage;$("refStartOverBtn").onclick=startOverFlow;$("fatigueBackBtn").onclick=goToStartPage;$("fatigueStartOverBtn").onclick=startOverFlow;$("adminBackBtn").onclick=goToStartPage;$("adminStartOverBtn").onclick=startOverFlow;$("resultsBackBtn").onclick=goToStartPage;$("resultsStartOverBtn").onclick=startOverFlow;$("resultsExportBtn").onclick=exportResults;$("resultsEmailBtn").onclick=emailResults;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("installBtn").disabled=false});$("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null};
 modeLabel.textContent="Subject mode";renderFatigueChecklist();renderRefresher();updateMetrics();
